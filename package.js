@@ -12,6 +12,7 @@ Package.onUse(function(api) {
   api.use(['check', 'underscore', 'mongo', 'blaze', 'templating', 'reactive-var', 'tracker']);
 
   api.use(['meteorhacks:subs-manager@1.2.0'], ['client', 'server'], {weak: true});
+  api.use(['meteorhacks:unblock@1.1.0'], ['server'])
 
   api.export('Tabular');
 

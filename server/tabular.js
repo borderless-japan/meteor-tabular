@@ -60,6 +60,8 @@ Meteor.publish("tabular_getInfo", function(tableName, selector, sort, skip, limi
   check(skip, Number);
   check(limit, Number);
 
+  this.unblock()
+
   var table = tablesByName[tableName];
   if (!table) {
     throw new Error('No TabularTable defined with the name "' + tableName + '". Make sure you are defining your TabularTable in common code.');
