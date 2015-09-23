@@ -1,4 +1,4 @@
-/* global check, Match, Meteor, tablesByName, _ */
+/* global check, Match, Meteor, _, Tabular */
 
 /*
  * These are the two publications used by TabularTable.
@@ -24,7 +24,7 @@ Meteor.publish("tabular_genericPub", function (tableName, ids, fields) {
   check(ids, Array);
   check(fields, Match.Optional(Object));
 
-  var table = tablesByName[tableName];
+  var table = Tabular.tablesByName[tableName];
   if (!table) {
     // We throw an error in the other pub, so no need to throw one here
     self.ready();
@@ -58,19 +58,13 @@ Meteor.publish("tabular_getInfo", function(tableName, selector, sort, skip, limi
   check(selector, Match.Optional(Match.OneOf(Object, null)));
   check(sort, Match.Optional(Match.OneOf(Array, null)));
   check(skip, Number);
-  check(limit, Number);
+  check(limit, Match.Optional(Match.OneOf(Number, null)));
 
-  this.unblock()
+  this.unblock();
 
-  var table = tablesByName[tableName];
+  var table = Tabular.tablesByName[tableName];
   if (!table) {
     throw new Error('No TabularTable defined with the name "' + tableName + '". Make sure you are defining your TabularTable in common code.');
-  }
-
-  // Verify that limit is not 0, because that will actually
-  // publish all document _ids.
-  if (limit === 0) {
-    limit = 1;
   }
 
   // Check security. We call this in both publications.
@@ -84,6 +78,11 @@ Meteor.publish("tabular_getInfo", function(tableName, selector, sort, skip, limi
   }
 
   selector = selector || {};
+
+  // Allow the user to modify the selector before we use it
+  if (typeof table.changeSelector === 'function') {
+    selector = table.changeSelector(selector, self.userId);
+  }
 
   // Apply the server side selector specified in the tabular
   // table constructor. Both must be met, so we join
@@ -100,9 +99,13 @@ Meteor.publish("tabular_getInfo", function(tableName, selector, sort, skip, limi
 
   var findOptions = {
     skip: skip,
-    limit: limit,
     fields: {_id: 1}
   };
+
+  // `limit` may be `null`
+  if (limit > 0) {
+    findOptions.limit = limit;
+  }
 
   // `sort` may be `null`
   if (_.isArray(sort)) {

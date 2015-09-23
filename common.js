@@ -1,8 +1,12 @@
-/* global Tabular:true, tablesByName:true, Mongo, _, Meteor */
+/* global Tabular:true, Mongo, _, Meteor, Template */
 
 Tabular = {}; //exported
 
-tablesByName = {};
+Tabular.tablesByName = {};
+
+if (Meteor.isClient) {
+  Template.registerHelper('TabularTables', Tabular.tablesByName);
+}
 
 Tabular.Table = function (options) {
   var self = this;
@@ -30,6 +34,7 @@ Tabular.Table = function (options) {
   self.onUnload = options.onUnload;
   self.allow = options.allow;
   self.allowFields = options.allowFields;
+  self.changeSelector = options.changeSelector;
 
   if (_.isArray(options.extraFields)) {
     var fields = {};
@@ -47,5 +52,5 @@ Tabular.Table = function (options) {
 
   self.options = _.omit(options, 'collection', 'pub', 'sub', 'onUnload', 'allow', 'allowFields', 'extraFields', 'name', 'selector');
 
-  tablesByName[self.name] = self;
+  Tabular.tablesByName[self.name] = self;
 };
